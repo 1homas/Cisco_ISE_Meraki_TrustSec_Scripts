@@ -33,7 +33,7 @@ These scripts assume the use of Cisco ISE and Meraki REST APIs using Python.
     export ISE_DEBUG=False
 
     export MERAKI_KEY='abcdef1234567890abcdef1234567890abcdef12'
-    export MERAKI_ORG_NAME=thomas
+    export MERAKI_ORG_NAME=example.org
     export MERAKI_NET_NAME=Lab
     ```
 
