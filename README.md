@@ -2,6 +2,9 @@
 
 Scripts and CSV templates for converting Cisco Identity Services Engine (ISE) TrustSec components and matrix to Cisco Meraki Adaptive Policy.
 
+![Excel Example TrustSec Matrix](images/Excel_Example_TrustSec_Matrix.png)
+![ISE Example TrustSec Matrix](images/ISE_3.3_Example_TrustSec_Matrix.png)
+
 These scripts assume the use of Cisco ISE and Meraki REST APIs using Python.
 
 ## Quick Start
