@@ -3,14 +3,9 @@
 # @author: Thomas Howard
 # @email: thomas@cisco.com
 #------------------------------------------------------------------------------
-# import aiohttp
-# import asyncio
+
 import argparse
-# import csv
-# import io
-# import json
 import os
-# import random
 import meraki
 import sys
 import time
@@ -43,6 +38,7 @@ You may add these export lines to a text file and load with `source`:
 MERAKI_DASHBOARD_BASE_URI = 'https://api.meraki.com/api/v1'
 DATA_DIR = './'
 MERAKI_BASE_FILENAME = 'meraki_trustsec'
+
 # Colors for matrix cells in Excel
 CISCO_BLUE    = '#049fd9'
 STATUS_BLUE   = '#64bbe3'
