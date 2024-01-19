@@ -1,65 +1,46 @@
 #!/usr/bin/env python3
 """
-Enable the ISE APIs
-Author: Thomas Howard, thomas@cisco.com
+Enable the ISE APIs using (synchronous) APIs!
 
-Usage
+Usage:
 
-  ise_api_enabled_async.py
+  ise_api_enabled.py
 
-Requires the following environment variables:
-  - ISE_HOSTNAME : the hostname or IP address of your ISE PAN node
-  - ISE_REST_USERNAME : the ISE ERS admin or operator username
-  - ISE_REST_PASSWORD : the ISE ERS admin or operator password
-  - ISE_CERT_VERIFY : validate the ISE certificate (true/false)
+Requires setting the these environment variables using the `export` command:
+  export ISE_HOSTNAME='1.2.3.4'         # hostname or IP address of ISE PAN
+  export ISE_REST_USERNAME='admin'      # ISE ERS admin or operator username
+  export ISE_REST_PASSWORD='C1sco12345' # ISE ERS admin or operator password
+  export ISE_CERT_VERIFY=false          # validate the ISE certificate
 
-Set the environment variables using the `export` command:
-  export ISE_HOSTNAME='1.2.3.4'
-  export ISE_REST_USERNAME='admin'
-  export ISE_REST_PASSWORD='C1sco12345'
-  export ISE_CERT_VERIFY=false
+You may add these `export` lines to a text file, customize them, and load with `source`:
+  source ise_environment.sh
 
-You may `source` the export lines from a text file for use:
-  source ise.sh
 """
+__author__ = "Thomas Howard"
+__email__ = "thomas@cisco.com"
+__license__ = "MIT - https://mit-license.org/"
 
-import asyncio
-import aiohttp
 import os
+import requests
 import sys
 
-# Globals
-CONTENT_TYPE_JSON = 'application/json'
-CONTENT_TYPE_XML = 'application/xml'
-JSON_HEADERS = {'Accept':CONTENT_TYPE_JSON, 'Content-Type':CONTENT_TYPE_JSON}
-XML_HEADERS = {'Accept':CONTENT_TYPE_XML, 'Content-Type':CONTENT_TYPE_XML}
-
-# Limit TCP connection pool size to prevent connection refusals by ISE!
-# 30 for ISE 2.6+; See https://cs.co/ise-scale for Concurrent ERS Connections.
-# Testing with ISE 3.0 shows *no* performance gain for >5-10
-TCP_CONNECTIONS_DEFAULT=10
-TCP_CONNECTIONS_MAX=30
-TCP_CONNECTIONS=5
+requests.packages.urllib3.disable_warnings() # Silence any requests package warnings about certificates
 
 
-async def ise_open_api_enable (session) :
-    """
-    """
-
+def ise_open_api_enable (session:requests.Session=None, ssl_verify:bool=True) :
+    url = 'https://'+env['ISE_HOSTNAME']+'/admin/API/apiService/update'
     data = '{ "papIsEnabled":true, "psnsIsEnabled":true }'
-    async with session.post('/admin/API/apiService/update', data=data) as response :
-        # print(response.status)
-        # print(await response.text())
-        if (response.status == 200 or response.status == 500 ) :
-            print("✅ ISE Open APIs Enabled")
+    r = session.post(url, data=data, verify=ssl_verify)
+    if r.status_code == 200:
+        print(f"✅ {r.status_code} ISE Open APIs Enabled")
+    elif r.status_code == 500: # 500 if already enabled
+        print(f"✅ {r.status_code} ISE Open APIs Enabled already")
+    else :
+        print(f"❌ {r.status_code} ISE Open APIs Disabled")
 
 
-async def ise_ers_api_enable (session) :
-    """
-    """
-
-    session.headers['Content-Type'] = CONTENT_TYPE_XML
-    session.headers['Accept'] = CONTENT_TYPE_XML
+def ise_ers_api_enable (session:requests.Session=None, ssl_verify:bool=True) :
+    url = 'https://'+env['ISE_HOSTNAME']+'/admin/API/NetworkAccessConfig/ERS'
     data = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <ersConfig>
 <id>1</id>
@@ -68,34 +49,31 @@ async def ise_ers_api_enable (session) :
 <isPsnsEnabled>true</isPsnsEnabled>
 </ersConfig>
 """
-
-    async with session.put('/admin/API/NetworkAccessConfig/ERS', data=data) as response :
-        # print(response.status)
-        # print(await response.text())
-        if (response.status == 200) :
-            print("✅ ISE ERS APIs Enabled")
-
-
-async def main():
-
-    # Load Environment Variables
-    env = { k : v for (k, v) in os.environ.items() if k.startswith('ISE_') }
-
-    # Create HTTP session
-    ssl_verify = (False if env['ISE_CERT_VERIFY'][0:1].lower() in ['f','n'] else True)
-    tcp_conn = aiohttp.TCPConnector(limit=TCP_CONNECTIONS, limit_per_host=TCP_CONNECTIONS, ssl=ssl_verify)
-    auth = aiohttp.BasicAuth(login=env['ISE_REST_USERNAME'], password=env['ISE_REST_PASSWORD'])
-    base_url = f"https://{env['ISE_HOSTNAME']}"
-    session = aiohttp.ClientSession(base_url, auth=auth, connector=tcp_conn, headers=JSON_HEADERS)
-
-    await ise_open_api_enable(session)
-    await ise_ers_api_enable(session)
-    await session.close()
+    r = session.put(url, data=data, headers={'Content-Type': 'application/xml', 'Accept': 'application/xml'}, verify=ssl_verify)
+    print(f"{'✅' if r.ok else '❌'} {r.status_code} ISE ERS APIs {'Enabled' if r.ok else 'Disabled'}")
 
 
 if __name__ == "__main__":
     """
     Entrypoint for local script.
     """
-    asyncio.run(main())
-    sys.exit(0) # 0 is ok
+    env_required_variables = ['ISE_HOSTNAME', 'ISE_REST_USERNAME', 'ISE_REST_PASSWORD', 'ISE_CERT_VERIFY']
+    env = { k : v for (k,v) in os.environ.items() } # Load environment variables
+    for v in env_required_variables: 
+        if env.get(v, None) == None:
+            sys.exit(f"Missing environment variable {v}")
+
+    ssl_verify = False if env['ISE_CERT_VERIFY'][0:1].lower() in ['f','n'] else True
+
+    with requests.Session() as session:
+      session = requests.Session()
+      session.auth = auth=( env['ISE_REST_USERNAME'], env['ISE_REST_PASSWORD'] )
+      session.headers.update({'Content-Type': 'application/json', 'Accept': 'application/json'})
+
+      try:
+          ise_open_api_enable(session, ssl_verify)
+          ise_ers_api_enable(session, ssl_verify)
+      except requests.exceptions.ConnectTimeout as e:
+          sys.exit(f"⏳ Connection timeout - Verify Connectivity. {e}")
+      except Exception as e:
+          sys.exit(f"Exception: {e}")
