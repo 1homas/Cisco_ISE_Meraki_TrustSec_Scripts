@@ -19,9 +19,7 @@ These scripts assume the use of Cisco ISE and Meraki REST APIs using Python.
 2.  Create your Python environment:  
 
     ```sh
-    python -m ensurepip --upgrade
-    pip3   install --upgrade pipenv     # use pipenv for a virtual development environment
-    pipenv install --python 3.11        # use Python 3.9 or later
+    pipenv install
     pipenv install -r requirements.txt  # install required Python packages (`pip freeze > requirements.txt`)
     pipenv shell
     ```
