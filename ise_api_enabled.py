@@ -7,10 +7,10 @@ Usage:
   ise_api_enabled.py
 
 Requires setting the these environment variables using the `export` command:
-  export ISE_HOSTNAME='1.2.3.4'         # hostname or IP address of ISE PAN
+  export ISE_PPAN='1.2.3.4'             # hostname or IP address of ISE PAN
   export ISE_REST_USERNAME='admin'      # ISE ERS admin or operator username
   export ISE_REST_PASSWORD='C1sco12345' # ISE ERS admin or operator password
-  export ISE_CERT_VERIFY=false          # validate the ISE certificate
+  export ISE_VERIFY=false               # validate the ISE certificate
 
 You may add these `export` lines to a text file, customize them, and load with `source`:
   source ise_environment.sh
@@ -28,7 +28,7 @@ requests.packages.urllib3.disable_warnings() # Silence any requests package warn
 
 
 def ise_open_api_enable (session:requests.Session=None, ssl_verify:bool=True) :
-    url = 'https://'+env['ISE_HOSTNAME']+'/admin/API/apiService/update'
+    url = 'https://'+env['ISE_PPAN']+'/admin/API/apiService/update'
     data = '{ "papIsEnabled":true, "psnsIsEnabled":true }'
     r = session.post(url, data=data, verify=ssl_verify)
     if r.status_code == 200:
@@ -40,7 +40,7 @@ def ise_open_api_enable (session:requests.Session=None, ssl_verify:bool=True) :
 
 
 def ise_ers_api_enable (session:requests.Session=None, ssl_verify:bool=True) :
-    url = 'https://'+env['ISE_HOSTNAME']+'/admin/API/NetworkAccessConfig/ERS'
+    url = 'https://'+env['ISE_PPAN']+'/admin/API/NetworkAccessConfig/ERS'
     data = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <ersConfig>
 <id>1</id>
@@ -57,13 +57,13 @@ if __name__ == "__main__":
     """
     Entrypoint for local script.
     """
-    env_required_variables = ['ISE_HOSTNAME', 'ISE_REST_USERNAME', 'ISE_REST_PASSWORD', 'ISE_CERT_VERIFY']
+    env_required_variables = ['ISE_PPAN', 'ISE_REST_USERNAME', 'ISE_REST_PASSWORD', 'ISE_VERIFY']
     env = { k : v for (k,v) in os.environ.items() } # Load environment variables
     for v in env_required_variables: 
         if env.get(v, None) == None:
             sys.exit(f"Missing environment variable {v}")
 
-    ssl_verify = False if env['ISE_CERT_VERIFY'][0:1].lower() in ['f','n'] else True
+    ssl_verify = False if env['ISE_VERIFY'][0:1].lower() in ['f','n'] else True
 
     with requests.Session() as session:
       session = requests.Session()

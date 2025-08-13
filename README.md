@@ -27,9 +27,9 @@ These scripts assume the use of Cisco ISE and Meraki REST APIs using Python.
 3.  Export your ISE credentials into your terminal environment
 
     ```sh
-    export ISE_HOSTNAME=ise.securitydemo.net    # ISE PAN for configuration
-    export ISE_USERNAME=admin
-    export ISE_PASSWORD=ISEisC00L
+    export ISE_PPAN=ise.securitydemo.net    # ISE PAN for configuration
+    export ISE_REST_USERNAME=admin
+    export ISE_REST_PASSWORD=ISEisC00L
     export ISE_VERIFY=False
     export ISE_DEBUG=False
 

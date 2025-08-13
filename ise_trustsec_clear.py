@@ -1,8 +1,28 @@
 #!/usr/bin/env python3
-#------------------------------------------------------------------------------
-# @author: Thomas Howard
-# @email: thomas@cisco.com
-#------------------------------------------------------------------------------
+"""
+
+Clear (delete) all ISE TrustSec data.
+
+Examples:
+    ise_trustsec_clear.py 
+    ise_trustsec_clear.py -v
+    ise_trustsec_clear.py -vvv
+    ise_trustsec_clear.py -vvv -it
+
+Requires setting the these environment variables using the `export` command:
+  export ISE_PPAN='1.2.3.4'             # hostname or IP address of ISE PAN
+  export ISE_REST_USERNAME='admin'      # ISE ERS admin or operator username
+  export ISE_REST_PASSWORD='C1sco12345' # ISE ERS admin or operator password
+  export ISE_VERIFY=false               # validate the ISE certificate
+
+You may add these export lines to a text file and load with `source`:
+  source ise.sh
+
+"""
+__author__ = "Thomas Howard"
+__email__ = "thomas@cisco.com"
+__license__ = "MIT - https://mit-license.org/"
+
 import aiohttp
 import asyncio
 import argparse
@@ -15,26 +35,6 @@ import time
 import pandas as pd         # dataframes
 
 # Globals
-USAGE = """
-
-Clear (delete) all ISE TrustSec data.
-
-Examples:
-    ise_trustsec_clear.py 
-    ise_trustsec_clear.py -v
-    ise_trustsec_clear.py -vvv
-    ise_trustsec_clear.py -vvv -it
-
-Requires setting the these environment variables using the `export` command:
-  export ISE_HOSTNAME='1.2.3.4'         # hostname or IP address of ISE PAN
-  export ISE_REST_USERNAME='admin'      # ISE ERS admin or operator username
-  export ISE_REST_PASSWORD='C1sco12345' # ISE ERS admin or operator password
-  export ISE_CERT_VERIFY=false          # validate the ISE certificate
-
-You may add these export lines to a text file and load with `source`:
-  source ise.sh
-
-"""
 JSON_HEADERS = {'Accept':'application/json', 'Content-Type':'application/json'}
 REST_PAGE_SIZE_DEFAULT=20
 REST_PAGE_SIZE_MAX=100
@@ -212,10 +212,7 @@ async def parse_cli_arguments () :
     """
     Parse the command line arguments
     """
-    ARGS = argparse.ArgumentParser(
-            description=USAGE,
-            formatter_class=argparse.RawDescriptionHelpFormatter,   # keep my format
-            )
+    ARGS = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ARGS.add_argument('-t', '--timer', action='store_true', default=False, help='show response timer' )
     ARGS.add_argument('-v', '--verbose', action='store_true', default=False, help='Verbosity; multiple allowed')
     return ARGS.parse_args()
@@ -243,10 +240,10 @@ async def main ():
 
     try :
         # Create HTTP session
-        ssl_verify = (False if env['ISE_CERT_VERIFY'][0:1].lower() in ['f','n'] else True)
+        ssl_verify = (False if env['ISE_VERIFY'][0:1].lower() in ['f','n'] else True)
         tcp_conn = aiohttp.TCPConnector(limit=TCP_CONNECTIONS, limit_per_host=TCP_CONNECTIONS, ssl=ssl_verify)
         auth = aiohttp.BasicAuth(login=env['ISE_REST_USERNAME'], password=env['ISE_REST_PASSWORD'])
-        base_url = f"https://{env['ISE_HOSTNAME']}"
+        base_url = f"https://{env['ISE_PPAN']}"
         session = aiohttp.ClientSession(base_url, auth=auth, connector=tcp_conn, headers=JSON_HEADERS)
 
         await ise_trustsec_clear(session)
