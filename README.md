@@ -16,11 +16,20 @@ These scripts assume the use of Cisco ISE and Meraki REST APIs using Python.
     cd Cisco_ISE_Meraki_TrustSec_Scripts
     ```
 
-2.  Create your Python environment:  
+2.  Create your Python environment using `uv`:  
+
+    ```sh
+    uv init
+    uv venv
+    uv add -r requirements.txt
+    source .venv/bin/activate
+    ```
+
+    or with `pipenv`:
 
     ```sh
     pipenv install
-    pipenv install -r requirements.txt  # install required Python packages (`pip freeze > requirements.txt`)
+    pipenv install -r requirements.txt
     pipenv shell
     ```
 
